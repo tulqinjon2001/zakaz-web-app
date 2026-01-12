@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-tg-bg text-tg-text;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-3 rounded-lg font-medium transition-colors active:opacity-80;
+  }
+  
+  .btn-primary {
+    @apply bg-tg-button text-tg-button-text;
+  }
+  
+  .btn-secondary {
+    @apply bg-tg-secondary-bg text-tg-text;
+  }
+  
+  .input {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tg-button bg-tg-bg text-tg-text;
+  }
+  
+  .card {
+    @apply bg-tg-secondary-bg rounded-lg shadow-sm p-4;
+  }
+  
+  .product-card {
+    @apply bg-white rounded-lg border border-gray-200 overflow-hidden;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .category-item {
+    @apply px-4 py-2 rounded-full bg-tg-secondary-bg text-tg-text whitespace-nowrap transition-colors active:opacity-80;
+  }
+  
+  .category-item.active {
+    @apply bg-tg-button text-tg-button-text;
+  }
+  
+  .badge {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .badge-pending {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .badge-accepted {
+    @apply bg-blue-100 text-blue-800;
+  }
+  
+  .badge-preparing {
+    @apply bg-purple-100 text-purple-800;
+  }
+  
+  .badge-shipped {
+    @apply bg-indigo-100 text-indigo-800;
+  }
+  
+  .badge-completed {
+    @apply bg-green-100 text-green-800;
+  }
+}
