@@ -10,6 +10,9 @@ import {
   Cake,
   UtensilsCrossed,
   Sandwich,
+  Menu,
+  X,
+  ChevronLeft,
 } from "lucide-react";
 import { clientAPI } from "../services/api";
 import { storage, STORAGE_KEYS } from "../utils/storage";
@@ -33,6 +36,7 @@ const Home = ({ telegram }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [sortBy, setSortBy] = useState(""); // "name-asc", "name-desc", "price-asc", "price-desc", "stock-asc", "stock-desc"
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Sidebar toggle state
 
   const storeInfo = storage.get(STORAGE_KEYS.STORE_INFO);
   const storeId = storeInfo?.id;
@@ -466,20 +470,40 @@ const Home = ({ telegram }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="h-screen flex items-center justify-center bg-gray-50">
         <div className="text-gray-500">Yuklanmoqda...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Left Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
-        <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">POS Shop</h1>
+      <div
+        className={`bg-white border-r border-gray-200 flex flex-col flex-shrink-0 h-full overflow-hidden transition-all duration-300 ease-in-out ${
+          sidebarOpen ? "w-64" : "w-0 border-r-0"
+        }`}
+      >
+        <div
+          className={`p-4 border-b border-gray-200 whitespace-nowrap overflow-hidden ${
+            sidebarOpen ? "opacity-100" : "opacity-0 w-0 p-0"
+          } transition-opacity duration-300`}
+        >
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-gray-900">POS Shop</h1>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronLeft size={20} className="text-gray-600" />
+            </button>
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div
+          className={`flex-1 overflow-y-auto overscroll-contain ${
+            sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"
+          } transition-opacity duration-300`}
+        >
           <div className="p-2">
             <div className="mb-2">
               <button
@@ -534,10 +558,21 @@ const Home = ({ telegram }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden h-full">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-4 py-3 flex-shrink-0">
           <div className="flex items-center space-x-3 mb-3">
+            {/* Sidebar Toggle Button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
+            >
+              {sidebarOpen ? (
+                <ChevronLeft size={20} className="text-gray-700" />
+              ) : (
+                <Menu size={20} className="text-gray-700" />
+              )}
+            </button>
             <div className="relative flex-1">
               <Search
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -595,7 +630,7 @@ const Home = ({ telegram }) => {
         </div>
 
         {/* Products Grid */}
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 bg-gray-50">
           {/* Filter/Sort Bar */}
           <div className="mb-4 flex items-center justify-between bg-white rounded-lg border border-gray-200 p-3">
             <div className="flex items-center space-x-3">

@@ -9,11 +9,20 @@ export const initTelegram = () => {
     // Enable closing confirmation
     tg.enableClosingConfirmation();
     
+    // Set background color to match Telegram theme
+    if (tg.themeParams && tg.themeParams.bg_color) {
+      document.body.style.backgroundColor = tg.themeParams.bg_color;
+    } else {
+      // Default background color
+      document.body.style.backgroundColor = '#ffffff';
+    }
+    
     // Set theme colors from Telegram
     const root = document.documentElement;
     if (tg.themeParams) {
       if (tg.themeParams.bg_color) {
         root.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color);
+        document.body.style.backgroundColor = tg.themeParams.bg_color;
       }
       if (tg.themeParams.text_color) {
         root.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color);
@@ -34,6 +43,14 @@ export const initTelegram = () => {
         root.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color);
       }
     }
+    
+    // Set viewport height for mobile
+    const setViewportHeight = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    setViewportHeight();
+    window.addEventListener('resize', setViewportHeight);
     
     return tg;
   }

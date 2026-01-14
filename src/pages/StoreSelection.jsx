@@ -7,6 +7,7 @@ import { MapPin, Loader } from 'lucide-react';
 const StoreSelection = () => {
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedStore, setSelectedStore] = useState(null);
   const navigate = useNavigate();
 
@@ -16,20 +17,48 @@ const StoreSelection = () => {
 
   const fetchStores = async () => {
     try {
+      setError(null);
       const response = await clientAPI.getStores();
-      setStores(response.data);
+      
+      // Check if response data is valid
+      if (!response || !response.data) {
+        throw new Error('Javob ma\'lumotlari noto\'g\'ri');
+      }
+      
+      const storesData = Array.isArray(response.data) ? response.data : [];
+      setStores(storesData);
       
       // Check if there's a previously selected store
       const savedStore = storage.get(STORAGE_KEYS.STORE_INFO);
-      if (savedStore) {
-        const store = response.data.find(s => s.id === savedStore.id);
+      if (savedStore && storesData.length > 0) {
+        const store = storesData.find(s => s.id === savedStore.id);
         if (store) {
           setSelectedStore(store);
         }
       }
     } catch (error) {
       console.error('Error fetching stores:', error);
-      alert('Do\'konlarni yuklashda xatolik');
+      
+      // Detailed error message
+      let errorMessage = 'Do\'konlarni yuklashda xatolik';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      
+      if (error.response) {
+        // Server responded with error
+        errorMessage = `Server xatosi: ${error.response.status} - ${error.response.data?.error || error.response.statusText}`;
+      } else if (error.request) {
+        // Request was made but no response
+        errorMessage = `Serverga ulanib bo'lmadi.\n\nAPI URL: ${apiUrl}\n\nInternet aloqasini tekshiring yoki backend server ishlamoqda ekanligini tekshiring.`;
+        console.error('API URL:', apiUrl);
+        console.error('Request config:', error.config);
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'So\'rov vaqti tugadi. Internet aloqasini tekshiring.';
+      } else {
+        // Other error
+        errorMessage = error.message || 'Noma\'lum xatolik';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -60,7 +89,22 @@ const StoreSelection = () => {
         </p>
 
         <div className="space-y-3">
-          {stores.length === 0 ? (
+          {error ? (
+            <div className="card text-center py-8 space-y-4">
+              <p className="text-red-500 font-semibold">{error}</p>
+              <button
+                onClick={fetchStores}
+                className="bg-tg-button text-tg-button-text px-4 py-2 rounded-lg font-semibold"
+              >
+                Qayta urinish
+              </button>
+              {import.meta.env.DEV && (
+                <p className="text-xs text-tg-hint mt-2">
+                  API URL: {import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}
+                </p>
+              )}
+            </div>
+          ) : stores.length === 0 ? (
             <div className="card text-center py-8">
               <p className="text-tg-hint">Do'konlar mavjud emas</p>
             </div>

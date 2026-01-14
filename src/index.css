@@ -3,12 +3,31 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html {
+    height: 100%;
+    overflow: hidden;
+  }
+  
   body {
     @apply bg-tg-bg text-tg-text;
     margin: 0;
     padding: 0;
+    height: 100%;
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    position: fixed;
+    width: 100%;
+    overscroll-behavior: none;
+  }
+  
+  #root {
+    height: 100%;
+    overflow: hidden;
   }
 }
 
