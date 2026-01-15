@@ -1,31 +1,33 @@
-import axios from 'axios';
-import { storage, STORAGE_KEYS } from '../utils/storage';
+import axios from "axios";
+import { storage, STORAGE_KEYS } from "../utils/storage";
 
-const API_BASE_URL = 'https://zakaz-backend-production.up.railway.app/api'; //import.meta.env.VITE_API_URL 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://zakaz-backend-production.up.railway.app/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   timeout: 10000, // 10 seconds timeout
 });
 
 // Log API URL in development
 if (import.meta.env.DEV) {
-  console.log('API Base URL:', API_BASE_URL);
+  console.log("API Base URL:", API_BASE_URL);
 }
 
 // Request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
     if (import.meta.env.DEV) {
-      console.log('API Request:', config.method?.toUpperCase(), config.url);
+      console.log("API Request:", config.method?.toUpperCase(), config.url);
     }
     return config;
   },
   (error) => {
-    console.error('API Request Error:', error);
+    console.error("API Request Error:", error);
     return Promise.reject(error);
   }
 );
@@ -35,7 +37,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (import.meta.env.DEV) {
-      console.error('API Response Error:', {
+      console.error("API Response Error:", {
         message: error.message,
         url: error.config?.url,
         status: error.response?.status,
@@ -55,31 +57,33 @@ const getStoreId = () => {
 // Client API
 export const clientAPI = {
   // Stores
-  getStores: () => api.get('/client/stores'),
-  
+  getStores: () => api.get("/client/stores"),
+
   // Categories
-  getCategories: () => api.get('/client/categories'),
-  
+  getCategories: () => api.get("/client/categories"),
+
   // Products
-  getProductsByStore: (storeId) => api.get(`/client/stores/${storeId}/products`),
+  getProductsByStore: (storeId) =>
+    api.get(`/client/stores/${storeId}/products`),
   searchProducts: (params) => {
     const storeId = getStoreId();
-    return api.get('/client/products/search', {
+    return api.get("/client/products/search", {
       params: {
         ...params,
         storeId: storeId || params.storeId,
       },
     });
   },
-  
+
   // Orders
-  createOrder: (data) => api.post('/client/orders', data),
+  createOrder: (data) => api.post("/client/orders", data),
   getUserOrders: (userId) => api.get(`/client/users/${userId}/orders`),
   getOrderById: (id) => api.get(`/client/orders/${id}`),
-  
+
   // Users
-  createOrGetUser: (data) => api.post('/client/users', data),
-  getUserByTelegramId: (telegramId) => api.get(`/client/users/telegram/${telegramId}`),
+  createOrGetUser: (data) => api.post("/client/users", data),
+  getUserByTelegramId: (telegramId) =>
+    api.get(`/client/users/telegram/${telegramId}`),
 };
 
 export default api;
