@@ -15,8 +15,9 @@ export default defineConfig({
     // },
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env.VITE_API_URL?.replace('/api', '') || 'https://zakaz-backend.railway.app',
         changeOrigin: true,
+        secure: true,
       }
     }
   },

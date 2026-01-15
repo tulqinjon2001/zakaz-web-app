@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { storage, STORAGE_KEYS } from '../utils/storage';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://zakaz-backend.railway.app/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -41,7 +41,7 @@ const StoreSelection = () => {
       
       // Detailed error message
       let errorMessage = 'Do\'konlarni yuklashda xatolik';
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://zakaz-backend.railway.app/api';
       
       if (error.response) {
         // Server responded with error
@@ -100,7 +100,7 @@ const StoreSelection = () => {
               </button>
               {import.meta.env.DEV && (
                 <p className="text-xs text-tg-hint mt-2">
-                  API URL: {import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}
+                  API URL: {import.meta.env.VITE_API_URL || 'https://zakaz-backend.railway.app/api'}
                 </p>
               )}
             </div>
