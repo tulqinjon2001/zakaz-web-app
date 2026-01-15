@@ -8,9 +8,11 @@ export default defineConfig({
     port: 5174,
     host: '0.0.0.0', // Allow access from network/ngrok
     strictPort: false,
-    hmr: {
-      clientPort: 443 // For ngrok HTTPS
-    },
+    // HMR sozlamasi - faqat Ngrok ishlatilganda kerak
+    // Agar Ngrok ishlatilmayotgan bo'lsa, bu qatorni comment qiling
+    // hmr: {
+    //   clientPort: 443 // For ngrok HTTPS
+    // },
     proxy: {
       '/api': {
         target: 'http://localhost:3000',

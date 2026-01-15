@@ -1,4 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useLayoutEffect,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -36,7 +42,9 @@ const Home = ({ telegram }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [sortBy, setSortBy] = useState(""); // "name-asc", "name-desc", "price-asc", "price-desc", "stock-asc", "stock-desc"
-  const [sidebarOpen, setSidebarOpen] = useState(true); // Sidebar toggle state
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar toggle state - default yopiq
+  const scrollContainerRef = useRef(null);
+  const savedScrollPosition = useRef(null);
 
   const storeInfo = storage.get(STORAGE_KEYS.STORE_INFO);
   const storeId = storeInfo?.id;
@@ -238,6 +246,14 @@ const Home = ({ telegram }) => {
     filterProducts();
   }, [selectedCategory, products, sortBy]);
 
+  // Restore scroll position when cart changes
+  useLayoutEffect(() => {
+    if (savedScrollPosition.current !== null && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = savedScrollPosition.current;
+      savedScrollPosition.current = null;
+    }
+  }, [cart]);
+
   const buildCategoryTree = (cats) => {
     const categoryMap = new Map();
     const rootCategories = [];
@@ -263,6 +279,7 @@ const Home = ({ telegram }) => {
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     setSearchQuery("");
+    setSidebarOpen(false); // Kategoriya tanlaganda sidebar yopiladi
   };
 
   const getCartQuantity = (productId) => {
@@ -289,11 +306,34 @@ const Home = ({ telegram }) => {
     isInCart,
     updateQuantity,
     addToCart,
+    scrollContainerRef,
+    savedScrollPosition,
   }) => {
     const [imageError, setImageError] = useState(false);
     const [inputValue, setInputValue] = useState(quantity.toString());
     const [showImageModal, setShowImageModal] = useState(false);
     const showDefaultImage = !product.imageUrl || imageError;
+
+    // Save scroll position before cart operations
+    const saveScrollPosition = () => {
+      if (scrollContainerRef && scrollContainerRef.current) {
+        savedScrollPosition.current = scrollContainerRef.current.scrollTop;
+      }
+    };
+
+    // Wrapper for addToCart to preserve scroll position
+    const handleAddToCart = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      saveScrollPosition();
+      addToCart(product, 1);
+    };
+
+    // Wrapper for updateQuantity to preserve scroll position
+    const handleUpdateQuantity = (newQuantity) => {
+      saveScrollPosition();
+      updateQuantity(product.id, newQuantity);
+    };
 
     // Update input value when quantity changes
     useEffect(() => {
@@ -322,14 +362,14 @@ const Home = ({ telegram }) => {
       if (isNaN(numValue) || numValue < 1) {
         // Reset to 1 if invalid
         setInputValue("1");
-        updateQuantity(product.id, 1);
+        handleUpdateQuantity(1);
       } else if (numValue > inventory.stockCount) {
         // Limit to stock count
         setInputValue(inventory.stockCount.toString());
-        updateQuantity(product.id, inventory.stockCount);
+        handleUpdateQuantity(inventory.stockCount);
       } else {
         // Update quantity
-        updateQuantity(product.id, numValue);
+        handleUpdateQuantity(numValue);
       }
     };
 
@@ -341,9 +381,9 @@ const Home = ({ telegram }) => {
 
     return (
       <>
-        <div className="w-48 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        <div className="w-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
           {/* Product Image */}
-          <div className="relative w-full h-28 bg-gray-50 flex items-center justify-center overflow-hidden cursor-pointer">
+          <div className="relative w-full h-40 sm:h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden cursor-pointer">
             {!showDefaultImage ? (
               <img
                 src={product.imageUrl}
@@ -368,7 +408,7 @@ const Home = ({ telegram }) => {
             {/* Qoldiq Badge */}
             {inventory.stockCount > 0 && (
               <div
-                className={`absolute top-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-white ${
+                className={`absolute top-2 right-2 px-2 py-1 rounded-lg text-xs font-bold text-white shadow-md ${
                   inventory.stockCount < 10 ? "bg-orange-500" : "bg-green-500"
                 }`}
               >
@@ -378,31 +418,35 @@ const Home = ({ telegram }) => {
           </div>
 
           {/* Product Info */}
-          <div className="p-2 space-y-1">
-            <h3 className="text-xs font-semibold text-gray-900 line-clamp-2 leading-tight">
+          <div className="p-3 sm:p-4 space-y-2">
+            <h3 className="text-sm sm:text-base font-semibold text-gray-900 line-clamp-2 leading-tight min-h-[2.5rem]">
               {product.name}
             </h3>
             {product.code && (
-              <p className="text-[9px] text-gray-500">Kod: {product.code}</p>
+              <p className="text-xs text-gray-500">Kod: {product.code}</p>
             )}
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-blue-600">
-                {inventory.price.toLocaleString("uz-UZ")} {inventory.currency}
+              <span className="text-lg sm:text-xl font-bold text-blue-600">
+                {inventory.price.toLocaleString("uz-UZ")}{" "}
+                <span className="text-sm">{inventory.currency}</span>
               </span>
             </div>
 
             {/* Action Button */}
             {inventory.stockCount > 0 ? (
               isInCart ? (
-                <div className="flex items-center justify-between bg-gray-50 rounded-lg p-1 mt-1">
+                <div className="flex items-center justify-between bg-gray-100 rounded-lg p-1.5 mt-2">
                   <button
-                    onClick={() =>
-                      updateQuantity(product.id, Math.max(1, quantity - 1))
-                    }
-                    className="w-7 h-7 bg-white text-gray-700 rounded flex items-center justify-center hover:bg-gray-100 transition-colors"
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleUpdateQuantity(Math.max(1, quantity - 1));
+                    }}
+                    className="w-9 h-9 bg-white text-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors shadow-sm"
                   >
-                    <Minus size={14} />
+                    <Minus size={16} />
                   </button>
                   <input
                     type="text"
@@ -410,33 +454,36 @@ const Home = ({ telegram }) => {
                     onChange={handleInputChange}
                     onBlur={handleInputBlur}
                     onKeyPress={handleInputKeyPress}
-                    className="w-12 h-7 bg-white border border-gray-200 rounded text-center text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-14 h-9 bg-white border-2 border-gray-300 rounded-lg text-center text-base font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     maxLength={4}
                   />
                   <button
-                    onClick={() =>
-                      updateQuantity(
-                        product.id,
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleUpdateQuantity(
                         Math.min(inventory.stockCount, quantity + 1)
-                      )
-                    }
-                    className="w-7 h-7 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700 transition-colors"
+                      );
+                    }}
+                    className="w-9 h-9 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors shadow-sm"
                   >
-                    <Plus size={14} />
+                    <Plus size={16} />
                   </button>
                 </div>
               ) : (
                 <button
-                  onClick={() => addToCart(product, 1)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-1.5 rounded-lg transition-colors flex items-center justify-center space-x-1 mt-1"
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-semibold py-2.5 sm:py-3 rounded-lg transition-colors flex items-center justify-center space-x-2 mt-2 shadow-sm"
                 >
-                  <Plus size={14} />
+                  <Plus size={18} />
                   <span>Savatga</span>
                 </button>
               )
             ) : (
-              <div className="w-full bg-gray-100 text-gray-400 text-xs font-semibold py-1.5 rounded-lg flex items-center justify-center border border-gray-200 mt-1">
-                TUGAGAN
+              <div className="w-full bg-gray-200 text-gray-500 text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center border border-gray-300 mt-2">
+                Tugagan
               </div>
             )}
           </div>
@@ -456,6 +503,7 @@ const Home = ({ telegram }) => {
                 onClick={(e) => e.stopPropagation()}
               />
               <button
+                type="button"
                 onClick={() => setShowImageModal(false)}
                 className="absolute top-4 right-4 bg-white text-gray-800 rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg z-10"
               >
@@ -477,12 +525,21 @@ const Home = ({ telegram }) => {
   }
 
   return (
-    <div className="h-screen bg-gray-50 flex overflow-hidden">
+    <div className="h-screen bg-gray-50 flex overflow-hidden relative">
+      {/* Backdrop Overlay (Mobile) */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Left Sidebar */}
       <div
-        className={`bg-white border-r border-gray-200 flex flex-col flex-shrink-0 h-full overflow-hidden transition-all duration-300 ease-in-out ${
-          sidebarOpen ? "w-64" : "w-0 border-r-0"
-        }`}
+        className={`bg-white border-r border-gray-200 flex flex-col flex-shrink-0 h-full overflow-hidden transition-all duration-300 ease-in-out
+          fixed md:relative z-50 md:z-auto
+          ${sidebarOpen ? "w-80 md:w-64" : "w-0 border-r-0"}
+        `}
       >
         <div
           className={`p-4 border-b border-gray-200 whitespace-nowrap overflow-hidden ${
@@ -490,12 +547,13 @@ const Home = ({ telegram }) => {
           } transition-opacity duration-300`}
         >
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900">POS Shop</h1>
+            <h1 className="text-xl font-bold text-gray-900">Kategoriyalar</h1>
             <button
+              type="button"
               onClick={() => setSidebarOpen(false)}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <ChevronLeft size={20} className="text-gray-600" />
+              <X size={20} className="text-gray-600" />
             </button>
           </div>
         </div>
@@ -507,6 +565,7 @@ const Home = ({ telegram }) => {
           <div className="p-2">
             <div className="mb-2">
               <button
+                type="button"
                 onClick={() => handleCategorySelect(null)}
                 className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
                   !selectedCategory
@@ -523,6 +582,7 @@ const Home = ({ telegram }) => {
               return (
                 <div key={category.id} className="mb-1">
                   <button
+                    type="button"
                     onClick={() => handleCategorySelect(category)}
                     className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors ${
                       selectedCategory?.id === category.id
@@ -537,6 +597,7 @@ const Home = ({ telegram }) => {
                     <div className="ml-8 mt-1 space-y-1">
                       {category.children.map((subCategory) => (
                         <button
+                          type="button"
                           key={subCategory.id}
                           onClick={() => handleCategorySelect(subCategory)}
                           className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm ${
@@ -564,14 +625,11 @@ const Home = ({ telegram }) => {
           <div className="flex items-center space-x-3 mb-3">
             {/* Sidebar Toggle Button */}
             <button
+              type="button"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
+              className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex-shrink-0 shadow-sm"
             >
-              {sidebarOpen ? (
-                <ChevronLeft size={20} className="text-gray-700" />
-              ) : (
-                <Menu size={20} className="text-gray-700" />
-              )}
+              <Menu size={20} className="text-white" />
             </button>
             <div className="relative flex-1">
               <Search
@@ -587,6 +645,7 @@ const Home = ({ telegram }) => {
               />
             </div>
             <button
+              type="button"
               onClick={() => navigate("/checkout")}
               className="relative p-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
@@ -598,13 +657,16 @@ const Home = ({ telegram }) => {
               )}
             </button>
           </div>
+        </div>
 
-          {/* Category Filter Tabs */}
-          {!searchQuery && (
-            <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+        {/* Category Filter Tabs - Alohida qator */}
+        {!searchQuery && (
+          <div className="bg-white border-b border-gray-200 px-4 py-2">
+            <div className="flex space-x-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
               <button
+                type="button"
                 onClick={() => handleCategorySelect(null)}
-                className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors text-sm font-medium ${
+                className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors text-sm font-semibold shadow-sm ${
                   !selectedCategory
                     ? "bg-blue-600 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -614,9 +676,10 @@ const Home = ({ telegram }) => {
               </button>
               {categoryTree.map((category) => (
                 <button
+                  type="button"
                   key={category.id}
                   onClick={() => handleCategorySelect(category)}
-                  className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors text-sm font-medium ${
+                  className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors text-sm font-semibold shadow-sm ${
                     selectedCategory?.id === category.id
                       ? "bg-blue-600 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -626,33 +689,31 @@ const Home = ({ telegram }) => {
                 </button>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Products Grid */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 bg-gray-50">
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto overscroll-contain p-4 bg-gray-50"
+        >
           {/* Filter/Sort Bar */}
-          <div className="mb-4 flex items-center justify-between bg-white rounded-lg border border-gray-200 p-3">
-            <div className="flex items-center space-x-3">
-              <span className="text-sm font-medium text-gray-700">
-                Tartiblash:
-              </span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-              >
-                <option value="">Tartiblanmagan</option>
-                <option value="name-asc">Nomi (A-Z)</option>
-                <option value="name-desc">Nomi (Z-A)</option>
-                <option value="price-asc">Narxi (Past → Yuqori)</option>
-                <option value="price-desc">Narxi (Yuqori → Past)</option>
-                <option value="stock-asc">Soni (Kam → Ko'p)</option>
-                <option value="stock-desc">Soni (Ko'p → Kam)</option>
-              </select>
-            </div>
-            <div className="text-sm text-gray-500">
-              Jami: {filteredProducts.length} ta mahsulot
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 shadow-sm"
+            >
+              <option value="">📊 Tartiblash</option>
+              <option value="name-asc">📝 Nomi (A-Z)</option>
+              <option value="name-desc">📝 Nomi (Z-A)</option>
+              <option value="price-asc">💰 Narxi ↑</option>
+              <option value="price-desc">💰 Narxi ↓</option>
+              <option value="stock-asc">📦 Soni ↑</option>
+              <option value="stock-desc">📦 Soni ↓</option>
+            </select>
+            <div className="bg-blue-600 text-white px-3 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap shadow-sm">
+              {filteredProducts.length} ta
             </div>
           </div>
 
@@ -661,7 +722,7 @@ const Home = ({ telegram }) => {
               <p className="text-gray-500">Mahsulotlar topilmadi</p>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {filteredProducts.map((product) => {
                 const inventory = product.inventories?.[0];
                 const quantity = getCartQuantity(product.id);
@@ -678,6 +739,8 @@ const Home = ({ telegram }) => {
                     isInCart={isInCart}
                     updateQuantity={updateQuantity}
                     addToCart={addToCart}
+                    scrollContainerRef={scrollContainerRef}
+                    savedScrollPosition={savedScrollPosition}
                   />
                 );
               })}
