@@ -2,15 +2,14 @@ import axios from "axios";
 import { storage, STORAGE_KEYS } from "../utils/storage";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://zakaz-backend-production.up.railway.app/api";
+  import.meta.env.VITE_API_URL || "http://localhost:3000/api"; //||  "https://zakaz-backend-production.up.railway.app/api"
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000, // 10 seconds timeout
+  timeout: 30000, // 30 seconds timeout (increased for order creation)
 });
 
 // Log API URL in development
@@ -76,7 +75,7 @@ export const clientAPI = {
   },
 
   // Orders
-  createOrder: (data) => api.post("/client/orders", data),
+  createOrder: (data) => api.post("/client/orders", data, { timeout: 30000 }), // 30 seconds for order creation
   getUserOrders: (userId) => api.get(`/client/users/${userId}/orders`),
   getOrderById: (id) => api.get(`/client/orders/${id}`),
 

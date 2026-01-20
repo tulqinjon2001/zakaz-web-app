@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { clientAPI } from '../services/api';
-import { getTelegramUser } from '../utils/telegram';
-import { ArrowLeft, Package, Clock } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { clientAPI } from "../services/api";
+import { getTelegramUser } from "../utils/telegram";
+import { storage, STORAGE_KEYS } from "../utils/storage";
+import { ArrowLeft, Package, Clock } from "lucide-react";
 
 const Orders = ({ telegram }) => {
   const navigate = useNavigate();
@@ -17,8 +18,11 @@ const Orders = ({ telegram }) => {
   const fetchUserAndOrders = async () => {
     try {
       const user = getTelegramUser();
+      console.log("Telegram user:", user);
+
       if (!user) {
-        navigate('/');
+        console.log("No Telegram user found, trying localStorage");
+        navigate("/");
         return;
       }
 
@@ -31,7 +35,7 @@ const Orders = ({ telegram }) => {
           // User doesn't exist, create one
           userResponse = await clientAPI.createOrGetUser({
             telegramId: user.id.toString(),
-            name: `${user.first_name} ${user.last_name || ''}`.trim(),
+            name: `${user.first_name} ${user.last_name || ""}`.trim(),
             phone: user.phone_number || null,
           });
         } else {
@@ -46,8 +50,8 @@ const Orders = ({ telegram }) => {
       const ordersResponse = await clientAPI.getUserOrders(currentUserId);
       setOrders(ordersResponse.data);
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      alert('Buyurtmalarni yuklashda xatolik');
+      console.error("Error fetching orders:", error);
+      alert("Buyurtmalarni yuklashda xatolik");
     } finally {
       setLoading(false);
     }
@@ -55,34 +59,34 @@ const Orders = ({ telegram }) => {
 
   const getStatusBadgeClass = (status) => {
     const classes = {
-      PENDING: 'badge badge-pending',
-      ACCEPTED: 'badge badge-accepted',
-      PREPARING: 'badge badge-preparing',
-      SHIPPED: 'badge badge-shipped',
-      COMPLETED: 'badge badge-completed',
+      PENDING: "badge badge-pending",
+      ACCEPTED: "badge badge-accepted",
+      PREPARING: "badge badge-preparing",
+      SHIPPED: "badge badge-shipped",
+      COMPLETED: "badge badge-completed",
     };
-    return classes[status] || 'badge bg-gray-100 text-gray-800';
+    return classes[status] || "badge bg-gray-100 text-gray-800";
   };
 
   const getStatusLabel = (status) => {
     const labels = {
-      PENDING: 'Kutilmoqda',
-      ACCEPTED: 'Qabul qilindi',
-      PREPARING: 'Tayyorlanmoqda',
-      SHIPPED: 'Yuborildi',
-      COMPLETED: 'Tugallandi',
+      PENDING: "Kutilmoqda",
+      ACCEPTED: "Qabul qilindi",
+      PREPARING: "Tayyorlanmoqda",
+      SHIPPED: "Yuborildi",
+      COMPLETED: "Tugallandi",
     };
     return labels[status] || status;
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString('uz-UZ', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleString("uz-UZ", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -100,12 +104,14 @@ const Orders = ({ telegram }) => {
       <div className="sticky top-0 z-10 bg-tg-bg border-b border-gray-200 p-4">
         <div className="flex items-center space-x-3 mb-4">
           <button
-            onClick={() => navigate('/home')}
+            onClick={() => navigate("/home")}
             className="p-2 bg-tg-secondary-bg rounded-lg"
           >
             <ArrowLeft size={24} className="text-tg-text" />
           </button>
-          <h1 className="text-xl font-bold text-tg-text">Mening buyurtmalarim</h1>
+          <h1 className="text-xl font-bold text-tg-text">
+            Mening buyurtmalarim
+          </h1>
         </div>
       </div>
 
@@ -116,7 +122,7 @@ const Orders = ({ telegram }) => {
             <Package size={48} className="mx-auto text-tg-hint mb-4" />
             <p className="text-tg-hint mb-4">Sizda hali buyurtmalar yo'q</p>
             <button
-              onClick={() => navigate('/home')}
+              onClick={() => navigate("/home")}
               className="btn btn-primary"
             >
               Mahsulotlarni ko'rish
@@ -126,7 +132,7 @@ const Orders = ({ telegram }) => {
           <div className="space-y-4">
             {orders.map((order) => {
               const items = Array.isArray(order.items) ? order.items : [];
-              const currency = items[0]?.currency || 'SUM';
+              const currency = items[0]?.currency || "SUM";
 
               return (
                 <div key={order.id} className="card">
@@ -168,7 +174,8 @@ const Orders = ({ telegram }) => {
                             className="flex justify-between text-sm"
                           >
                             <span className="text-tg-text">
-                              {item.productName || `Mahsulot #${item.productId}`}
+                              {item.productName ||
+                                `Mahsulot #${item.productId}`}
                             </span>
                             <span className="text-tg-hint">
                               x{item.quantity}
@@ -182,7 +189,7 @@ const Orders = ({ telegram }) => {
                   <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                     <span className="text-sm text-tg-hint">Jami:</span>
                     <span className="font-bold text-lg text-tg-text">
-                      {order.totalPrice?.toLocaleString('uz-UZ')} {currency}
+                      {order.totalPrice?.toLocaleString("uz-UZ")} {currency}
                     </span>
                   </div>
                 </div>

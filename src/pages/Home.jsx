@@ -19,6 +19,9 @@ import {
   Menu,
   X,
   ChevronLeft,
+  History,
+  HelpCircle,
+  User,
 } from "lucide-react";
 import { clientAPI } from "../services/api";
 import { storage, STORAGE_KEYS } from "../utils/storage";
@@ -110,7 +113,7 @@ const Home = ({ telegram }) => {
         const priceText = totalPrice.toLocaleString("uz-UZ");
 
         telegram.MainButton.setText(
-          `Buyurtma berish (${priceText} ${currency})`
+          `Buyurtma berish (${priceText} ${currency})`,
         );
         telegram.MainButton.onClick(() => navigate("/checkout"));
         telegram.MainButton.show();
@@ -232,7 +235,7 @@ const Home = ({ telegram }) => {
       // Get all category IDs including sub-categories
       const categoryIds = getAllCategoryIds(selectedCategory);
       filtered = filtered.filter((product) =>
-        categoryIds.includes(product.categoryId)
+        categoryIds.includes(product.categoryId),
       );
     }
 
@@ -463,7 +466,7 @@ const Home = ({ telegram }) => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleUpdateQuantity(
-                        Math.min(inventory.stockCount, quantity + 1)
+                        Math.min(inventory.stockCount, quantity + 1),
                       );
                     }}
                     className="w-9 h-9 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors shadow-sm"
@@ -659,8 +662,8 @@ const Home = ({ telegram }) => {
           </div>
         </div>
 
-        {/* Category Filter Tabs - Alohida qator */}
-        {!searchQuery && (
+        {/* Category Filter Tabs - HIDDEN */}
+        {false && !searchQuery && (
           <div className="bg-white border-b border-gray-200 px-4 py-2">
             <div className="flex space-x-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
               <button
@@ -695,7 +698,7 @@ const Home = ({ telegram }) => {
         {/* Products Grid */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto overscroll-contain p-4 bg-gray-50"
+          className="flex-1 overflow-y-auto overscroll-contain p-4 bg-gray-50 pb-80"
         >
           {/* Filter/Sort Bar */}
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -746,6 +749,33 @@ const Home = ({ telegram }) => {
               })}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Fixed Footer Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-lg">
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => navigate("/orders")}
+            className="flex flex-col items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          >
+            <History size={28} className="text-orange-500" />
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/help")}
+            className="flex flex-col items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          >
+            <HelpCircle size={28} className="text-red-500" />
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/account")}
+            className="flex flex-col items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          >
+            <User size={28} className="text-blue-600" />
+          </button>
         </div>
       </div>
     </div>

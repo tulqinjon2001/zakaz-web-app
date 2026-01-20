@@ -99,7 +99,7 @@ const Checkout = ({ telegram }) => {
       (error) => {
         console.error("Geolocation error:", error);
         alert("Lokatsiyani olishda xatolik yuz berdi");
-      }
+      },
     );
   };
 
@@ -146,13 +146,6 @@ const Checkout = ({ telegram }) => {
       ...prev,
       [name]: value,
     }));
-  };
-
-  const handleClearCart = () => {
-    if (window.confirm("Savatni tozalashni xohlaysizmi?")) {
-      clearCart();
-      navigate("/home");
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -273,16 +266,12 @@ const Checkout = ({ telegram }) => {
               onClick={() => navigate("/home")}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <ArrowLeft size={20} className="text-gray-700" />
+              <ArrowLeft size={24} className="text-gray-700" />
             </button>
-            <h1 className="text-lg font-bold text-gray-900">Savat</h1>
+            <h1 className="text-lg font-bold text-gray-900">
+              Buyurtmani rasmiylashtirisih
+            </h1>
           </div>
-          <button
-            onClick={handleClearCart}
-            className="text-red-500 text-sm font-medium hover:text-red-600 transition-colors"
-          >
-            Tozalash
-          </button>
         </div>
       </div>
 
@@ -294,243 +283,153 @@ const Checkout = ({ telegram }) => {
           minHeight: 0,
         }}
       >
-        <div className="px-4 py-4 space-y-4 pb-6">
-          {/* Products List */}
-          <div className="space-y-2.5">
-            {cart.map((item) => (
-              <div
-                key={item.productId}
-                className="bg-white rounded-lg p-3 shadow-sm border border-gray-100"
-              >
-                <div className="flex items-center space-x-2.5">
-                  {/* Product Image */}
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
-                    {item.productImage ? (
-                      <img
-                        src={item.productImage}
-                        alt={item.productName}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.nextSibling.style.display = "flex";
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      className="w-full h-full flex items-center justify-center bg-gray-100"
-                      style={{ display: item.productImage ? "none" : "flex" }}
-                    >
-                      <span className="text-lg font-bold text-gray-400">
-                        {item.productName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-gray-900 mb-0.5 leading-tight">
+        <div className="px-4 py-4 space-y-3 pb-40">
+          {/* Order Summary */}
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <h2 className="text-sm font-bold text-gray-900 mb-3">
+              Buyurtma xulosasihi
+            </h2>
+            <div className="space-y-2">
+              {cart.map((item) => (
+                <div
+                  key={item.productId}
+                  className="flex justify-between text-sm"
+                >
+                  <div>
+                    <p className="font-medium text-gray-900">
                       {item.productName}
-                    </h3>
-                    {item.productCode && (
-                      <p className="text-[10px] text-gray-500 mb-1.5">
-                        Kod: {item.productCode}
-                      </p>
-                    )}
-                    <p className="text-sm font-bold text-blue-600 mb-2">
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {item.quantity} dona ×{" "}
                       {item.price.toLocaleString("uz-UZ")} {item.currency}
                     </p>
-
-                    {/* Quantity Selector */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-1.5 bg-gray-100 rounded-lg p-0.5">
-                        <button
-                          onClick={() =>
-                            updateQuantity(
-                              item.productId,
-                              Math.max(1, item.quantity - 1)
-                            )
-                          }
-                          className="w-7 h-7 bg-white text-gray-700 rounded-md flex items-center justify-center hover:bg-gray-200 transition-colors shadow-sm active:scale-95"
-                        >
-                          <Minus size={12} />
-                        </button>
-                        <span className="w-10 text-center text-xs font-bold text-gray-900">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() =>
-                            updateQuantity(item.productId, item.quantity + 1)
-                          }
-                          className="w-7 h-7 bg-blue-600 text-white rounded-md flex items-center justify-center hover:bg-blue-700 transition-colors shadow-sm active:scale-95"
-                        >
-                          <Plus size={12} />
-                        </button>
-                      </div>
-
-                      {/* Delete Button */}
-                      <button
-                        onClick={() => removeFromCart(item.productId)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 transition-colors active:scale-95"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
                   </div>
+                  <p className="font-bold text-blue-600">
+                    {(item.price * item.quantity).toLocaleString("uz-UZ")}{" "}
+                    {item.currency}
+                  </p>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Order Summary */}
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <div className="space-y-2.5 mb-4">
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>Mahsulotlar ({totalItems} dona)</span>
-                <span>
-                  {totalPrice.toLocaleString("uz-UZ")} {currency}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>Chegirma</span>
-                <span className="text-green-600">
-                  - {discount.toLocaleString("uz-UZ")} {currency}
-                </span>
-              </div>
+              ))}
             </div>
-            <div className="pt-3 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-base font-bold text-gray-900">JAMI:</span>
-                <span className="text-xl font-bold text-blue-600">
+
+            {/* Total */}
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-gray-900">Jami:</span>
+                <span className="text-lg font-bold text-blue-600">
                   {totalPrice.toLocaleString("uz-UZ")} {currency}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* User Information Form */}
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <h2 className="text-base font-bold text-gray-900 mb-4">
-              Foydalanuvchi ma'lumotlari
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                  Ism
-                </label>
-                <div className="relative">
-                  <User
-                    size={16}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  />
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                    placeholder="Ismingizni kiriting"
-                  />
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                  Telefon raqami
-                </label>
-                <div className="relative">
-                  <Phone
-                    size={16}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  />
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                    placeholder="+998 90 123 45 67"
-                  />
-                </div>
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                  Manzil (qo'lda yozing)
-                </label>
-                <div className="relative">
-                  <MapPin
-                    size={16}
-                    className="absolute left-3 top-3 text-gray-400"
-                  />
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    rows={2}
-                    className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 resize-none"
-                    placeholder="To'liq manzilni kiriting (ko'cha, uy, kvartira)"
-                  />
-                </div>
-              </div>
-
-              {/* Location */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                  Lokatsiya
-                </label>
-                <div className="space-y-2 mb-2">
-                  <button
-                    type="button"
-                    onClick={handleRequestLocation}
-                    className="w-full px-3 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <Map size={18} className="text-gray-400" />
-                    <span className="text-xs font-medium text-gray-700">
-                      Joriy lokatsiyani olish
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleOpenMapModal}
-                    className="w-full px-3 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <MapPin size={18} />
-                    <span className="text-xs font-medium">
-                      Xaritadan tanlash
-                    </span>
-                  </button>
-                </div>
-                {useLocation && locationData && (
-                  <div className="p-2 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700 mb-2">
-                    ✓ Lokatsiya muvaffaqiyatli olingan
-                  </div>
-                )}
+          {/* User Information Form - Simplified */}
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Name */}
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <label className="block text-xs font-medium text-gray-700 mb-2">
+                Ismingiz
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  👤
+                </span>
                 <input
                   type="text"
-                  name="location"
-                  value={formData.location}
+                  name="name"
+                  value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                  placeholder="Masalan: 41.3111, 69.2797"
+                  required
+                  className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  placeholder="Ismingizni kiriting"
                 />
               </div>
+            </div>
 
-              {/* Submit Button */}
+            {/* Phone */}
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <label className="block text-xs font-medium text-gray-700 mb-2">
+                Telefon raqami
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  📞
+                </span>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  placeholder="+998 90 123 45 67"
+                />
+              </div>
+            </div>
+
+            {/* Address */}
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <label className="block text-xs font-medium text-gray-700 mb-2">
+                Yetkazib berish manzili
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-3">📍</span>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  rows={2}
+                  className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white resize-none"
+                  placeholder="Manzil yoki lokatsiya"
+                />
+                <button
+                  type="button"
+                  onClick={handleRequestLocation}
+                  className="absolute right-3 top-3 p-2 hover:bg-gray-100 rounded text-blue-600"
+                >
+                  <MapPin size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Payment Method */}
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <label className="block text-xs font-medium text-gray-700 mb-3">
+                To'lov turi
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  className="flex flex-col items-center gap-2 p-3 border-2 border-blue-300 bg-blue-50 rounded-lg"
+                >
+                  <span className="text-2xl">💵</span>
+                  <span className="text-xs font-semibold text-gray-900">
+                    Naqd pul
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="flex flex-col items-center gap-2 p-3 border-2 border-gray-300 bg-white rounded-lg hover:border-gray-400"
+                >
+                  <span className="text-2xl">💳</span>
+                  <span className="text-xs font-semibold text-gray-900">
+                    Karta orqali
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="bg-white rounded-lg p-4 shadow-sm">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3.5 rounded-lg transition-colors text-base mt-2"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 rounded-lg transition-colors"
               >
-                {loading ? "Buyurtma berilmoqda..." : "Buyurtmani yakunlash"}
+                {loading ? "Buyurtma berilmoqda..." : "Buyurtma berish"}
               </button>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -599,7 +498,7 @@ const Checkout = ({ telegram }) => {
                       // Open Google Maps in new tab for better selection
                       window.open(
                         `https://www.google.com/maps/search/?api=1&query=${mapLocation.latitude},${mapLocation.longitude}`,
-                        "_blank"
+                        "_blank",
                       );
                     }}
                     className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
