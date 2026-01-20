@@ -2,7 +2,8 @@ import axios from "axios";
 import { storage, STORAGE_KEYS } from "../utils/storage";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api"; //||  "https://zakaz-backend-production.up.railway.app/api"
+  import.meta.env.VITE_API_URL ||
+  "https://zakaz-backend-production.up.railway.app/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -28,7 +29,7 @@ api.interceptors.request.use(
   (error) => {
     console.error("API Request Error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor for error handling
@@ -44,7 +45,7 @@ api.interceptors.response.use(
       });
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 // Get storeId from storage
