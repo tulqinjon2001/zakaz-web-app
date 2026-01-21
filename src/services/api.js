@@ -13,37 +13,49 @@ const api = axios.create({
   timeout: 30000, // 30 seconds timeout (increased for order creation)
 });
 
-// Log API URL in development
-if (import.meta.env.DEV) {
-  console.log("API Base URL:", API_BASE_URL);
-}
+// Log API URL (always log in production for debugging)
+console.log("🔗 API Base URL:", API_BASE_URL);
 
 // Request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
-    if (import.meta.env.DEV) {
-      console.log("API Request:", config.method?.toUpperCase(), config.url);
-    }
+    console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
-    console.error("API Request Error:", error);
+    console.error("❌ API Request Error:", error);
     return Promise.reject(error);
   },
 );
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    return response;
+  },
   (error) => {
-    if (import.meta.env.DEV) {
-      console.error("API Response Error:", {
-        message: error.message,
-        url: error.config?.url,
-        status: error.response?.status,
-        data: error.response?.data,
-      });
+    // Always log errors in production for debugging
+    console.error("❌ API Response Error:", {
+      message: error.message,
+      url: error.config?.url,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      baseURL: error.config?.baseURL,
+    });
+    
+    // Show user-friendly error messages
+    if (error.code === 'ECONNABORTED') {
+      console.error("⏱️ Request timeout - server may be slow or unresponsive");
+    } else if (error.code === 'ERR_NETWORK') {
+      console.error("🌐 Network error - check internet connection or server status");
+    } else if (error.response?.status === 404) {
+      console.error("🔍 Endpoint not found - check API URL configuration");
+    } else if (error.response?.status >= 500) {
+      console.error("🔥 Server error - backend may be down or experiencing issues");
     }
+    
     return Promise.reject(error);
   },
 );

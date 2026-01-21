@@ -21,8 +21,21 @@ function App() {
 
   useEffect(() => {
     // Initialize Telegram WebApp
-    const tg = initTelegram();
-    setTelegram(tg);
+    try {
+      const tg = initTelegram();
+      setTelegram(tg);
+      
+      if (tg) {
+        console.log("✅ Telegram WebApp initialized successfully");
+        console.log("📱 Telegram WebApp version:", tg.version);
+        console.log("👤 User:", tg.initDataUnsafe?.user);
+      } else {
+        console.warn("⚠️ Telegram WebApp not detected - running in browser mode");
+        console.warn("💡 This is normal if testing in a regular browser");
+      }
+    } catch (error) {
+      console.error("❌ Error initializing Telegram WebApp:", error);
+    }
 
     // Check if store is selected
     const storeInfo = storage.get(STORAGE_KEYS.STORE_INFO);
